@@ -1,7 +1,7 @@
 class Game(object):
 
     # 历史最高分
-    top_score=0
+    top_score = 0
 
     def __init__(self,name):
         self.name=name
