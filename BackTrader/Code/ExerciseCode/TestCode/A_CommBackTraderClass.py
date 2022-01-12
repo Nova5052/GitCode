@@ -24,12 +24,13 @@ import A_PrintFunction
 
 # 回测类
 class BackTest:
-    def __init__(self, strategy, start, end, code, name, cash = 0.01, commission = 0.0003, benchmarkCode = "510300", bDraw = True):
+    def __init__(self, strategy, start, end, code, name, cash=0.01, commission=0.0003, benchmarkCode="510300",
+                 bDraw=True):
         self.__cerebro = None
-        self.__strategy = strategy #策略实体
-        self.__startDate = start #数据查询开始日期
-        self.__endDate = end #数据查询结束日期
-        self.__code = code #股票代码
+        self.__strategy = strategy  # 策略实体
+        self.__startDate = start  # 数据查询开始日期
+        self.__endDate = end  # 数据查询结束日期
+        self.__code = code  # 股票代码
         self.__name = name
         self.__result = None
         self.__commission = commission
@@ -41,7 +42,6 @@ class BackTest:
         self.__benchFeed = None
         self.__bDraw = bDraw
         self._init()
-        
 
     # 真正进行初始化的地方
     def _init(self):
@@ -51,18 +51,14 @@ class BackTest:
         self._settingCerebro()
         plt.switch_backend('agg')
 
-
     # 执行回测
     def run(self):
         self.__backtestResult["期初账户总值"] = self.getValue()
         self.__results = self.__cerebro.run()
         self.__backtestResult["期末账户总值"] = self.getValue()
 
-        aResult=self.__results[0]
-        A_PrintFunction.printTradeAnalysis(self.__cerebro,aResult.analyzers)
-
-
-
+        aResult = self.__results[0]
+        A_PrintFunction.printTradeAnalysis(self.__cerebro, aResult.analyzers)
 
         self._Result()
         if self.__bDraw == True:
@@ -71,7 +67,6 @@ class BackTest:
         self.__benchReturns = self._getBenchmarkReturns(self.__results)
         self._riskAnaly(self.__returns, self.__benchReturns, self.__backtestResult)
         return self.getResult()
-
 
     # 执行参数优化的回测
     def optRun(self, *args, **kwargs):
@@ -86,73 +81,73 @@ class BackTest:
 
     # 进行参数优化
     def _optStrategy(self, *args, **kwargs):
-        self.__cerebro = bt.Cerebro(maxcpus = 1)
+        self.__cerebro = bt.Cerebro(maxcpus=1)
         self.__cerebro.optstrategy(self.__strategy, *args, **kwargs)
         self._createDataFeeds()
         self._settingCerebro()
 
-
     # 获取账户总价值
     def getValue(self):
         return self.__cerebro.broker.getvalue()
-        
+
     # 获取回测指标
     def getResult(self):
         return self.__backtestResult
-        
+
     # 获取策略及基准策略收益率的序列
     def getReturns(self):
         return self.__returns, self.__benchReturns
-        
 
-        
     # # 输出回测结果
     # def output(self):
     #     print("夏普比例:", self.__results[0].analyzers.sharpe.get_analysis()["sharperatio"])
     #     print("年化收益率:", self.__results[0].analyzers.AR.get_analysis())
-    #     print("最大回撤:%.2f，最大回撤周期%d" % (self.__results[0].analyzers.DD.get_analysis().max.drawdown, self.__results[0].analyzers.DD.get_analysis().max.len))
+    #     print("最大回撤:%.2f，最大回撤周期%d" % (self.__results[0].analyzers.DD.get_analysis().max.drawdown,
+    #     self.__results[0].analyzers.DD.get_analysis().max.len))
     #     print("总收益率:%.2f" % (self.__results[0].analyzers.RE.get_analysis()["rtot"]))
     #     # self.__results[0].analyzers.TA.pprint()
-            
-     
+
     # 设置cerebro
     def _settingCerebro(self):
         # 添加回撤观察器
         self.__cerebro.addobserver(bt.observers.DrawDown)
         # 添加基准观察器
-        self.__cerebro.addobserver(bt.observers.Benchmark, data = self.__benchFeed, timeframe = bt.TimeFrame.NoTimeFrame)
+        self.__cerebro.addobserver(bt.observers.Benchmark, data=self.__benchFeed, timeframe=bt.TimeFrame.NoTimeFrame)
         # 设置手续费
         self.__cerebro.broker.setcommission(commission=self.__commission)
         # 设置初始资金
         self.__cerebro.broker.setcash(self.__initcash)
         # 添加分析对象
-        self.__cerebro.addanalyzer(btay.SharpeRatio, _name = "sharpe", riskfreerate = 0.02, stddev_sample = True, annualize = True)
-        self.__cerebro.addanalyzer(btay.AnnualReturn, _name = "AR")
-        self.__cerebro.addanalyzer(btay.DrawDown, _name = "DD")
-        self.__cerebro.addanalyzer(btay.Returns, _name = "RE")
-        self.__cerebro.addanalyzer(btay.TradeAnalyzer, _name = "TA")
-        self.__cerebro.addanalyzer(btay.TimeReturn, _name = "TR")
-        self.__cerebro.addanalyzer(btay.TimeReturn, _name = "TR_Bench", data = self.__benchFeed)
-        self.__cerebro.addanalyzer(btay.SQN, _name = "SQN")
-        
+        self.__cerebro.addanalyzer(btay.SharpeRatio, _name="sharpe", riskfreerate=0.02, stddev_sample=True,
+                                   annualize=True)
+        self.__cerebro.addanalyzer(btay.AnnualReturn, _name="AR")
+        self.__cerebro.addanalyzer(btay.DrawDown, _name="DD")
+        self.__cerebro.addanalyzer(btay.Returns, _name="RE")
+        self.__cerebro.addanalyzer(btay.TradeAnalyzer, _name="TA")
+        self.__cerebro.addanalyzer(btay.TimeReturn, _name="TR")
+        self.__cerebro.addanalyzer(btay.TimeReturn, _name="TR_Bench", data=self.__benchFeed)
+        self.__cerebro.addanalyzer(btay.SQN, _name="SQN")
+
     # 建立数据源
     def _createDataFeeds(self):
         # 建立回测数据源
         for i in range(len(self.__code)):
             dataFeed = self._createDataFeedsProcess(self.__code[i], self.__name[i])
-            self.__cerebro.adddata(dataFeed, name = self.__name[i])  #向大脑添加数据
+            self.__cerebro.adddata(dataFeed, name=self.__name[i])  # 向大脑添加数据
         self.__benchFeed = self._createDataFeedsProcess(self.__benchmarkCode, "benchMark")
-        self.__cerebro.adddata(self.__benchFeed, name = "benchMark")
-            
+        self.__cerebro.adddata(self.__benchFeed, name="benchMark")
+
     # 建立数据源的具体过程
     def _createDataFeedsProcess(self, code, name):
         df_data = self._getData(code)
-        dataFeed = bt.feeds.PandasData(dataname = df_data, name = name, fromdate = pd.to_datetime(self.__startDate), todate = pd.to_datetime(self.__endDate))
+        dataFeed = bt.feeds.PandasData(dataname=df_data, name=name, fromdate=pd.to_datetime(self.__startDate),
+                                       todate=pd.to_datetime(self.__endDate))
         return dataFeed
 
         # 从 tushare 获取数据
+
     def _getData(self, code):
-        filename = code+".csv"
+        filename = code + ".csv"
         path = "./data/"
         # 如果数据目录不存在，创建目录
         if not os.path.exists(path):
@@ -160,15 +155,15 @@ class BackTest:
         # 已有数据文件，直接读取数据
         if os.path.exists(path + filename):
             df = pd.read_csv(path + filename)
-        else: # 没有数据文件，用tushare下载
-            df = ts.get_k_data(code, autype = "qfq", start = self.__startDate,  end = self.__endDate)
+        else:  # 没有数据文件，用tushare下载
+            df = ts.get_k_data(code, autype="qfq", start=self.__startDate, end=self.__endDate)
             df.to_csv(path + filename)
         df.index = pd.to_datetime(df.date)
-        df['openinterest']=0
-        df=df[['open','high','low','close','volume','openinterest']]
+        df['openinterest'] = 0
+        df = df[['open', 'high', 'low', 'close', 'volume', 'openinterest']]
         return df
 
-    #region
+    # region
     # # 从baostock获取数据 并直接返回 datefeed
     # def _getData(self, code):
     #     lg=bs.login()
@@ -199,7 +194,7 @@ class BackTest:
     #     bs.logout()
     #     return data
 
-    #endregion
+    # endregion
 
     # 计算胜率信息
     def _winInfo(self, trade_info, result):
@@ -208,16 +203,16 @@ class BackTest:
             win_num = trade_info["won"]["total"]
             lost_num = trade_info["lost"]["total"]
             result["交易次数"] = total_trade_num
-            result["胜率"] = win_num/total_trade_num
-            result["败率"] = lost_num/total_trade_num
-            
+            result["胜率"] = win_num / total_trade_num
+            result["败率"] = lost_num / total_trade_num
+
     # 根据SQN值对策略做出评估
     # 按照backtrader文档写的
     def _judgeBySQN(self, sqn):
         result = None
-        if sqn >= 1.6 and sqn <= 1.9:
+        if 1.6 <= sqn <= 1.9:
             result = "低于平均"
-        elif sqn > 1.9 and sqn <= 2.4:
+        elif 1.9 < sqn <= 2.4:
             result = "平均水平"
         elif sqn > 2.4 and sqn <= 2.9:
             result = "良好"
@@ -231,7 +226,7 @@ class BackTest:
             result = "很差"
         self.__backtestResult["策略评价(根据SQN)"] = result
         return result
-        
+
     # 计算并保存回测结果指标
     def _Result(self):
         self.__backtestResult["账户总额"] = self.getValue()
@@ -247,7 +242,7 @@ class BackTest:
         # # 计算胜率信息
         # trade_info = self.__results[0].analyzers.TA.get_analysis()
         # self._winInfo(trade_info, self.__backtestResult)
-        
+
     # 取得优化参数时的指标结果
     def _getOptAnalysis(self, result):
         temp = dict()
@@ -262,7 +257,7 @@ class BackTest:
         # trade_info = self.__results[0].analyzers.TA.get_analysis()
         # self._winInfo(trade_info, temp)
         return temp
-        
+
     # 在优化多个参数时计算并保存回测结果
     def _optResultMore(self, results, **kwargs):
         testResults = pd.DataFrame()
@@ -278,15 +273,14 @@ class BackTest:
                 testResults = testResults.append(temp, ignore_index=True)
             # testResults.set_index(["参数值"], inplace = True)
         return testResults
-                
-        
+
     # 在优化参数时计算并保存回测结果
     def _optResult(self, results, **kwargs):
         testResults = pd.DataFrame()
         params = []
         for k, v in kwargs.items():
             for t in v:
-                 params.append(t)
+                params.append(t)
         i = 0
         for result in results:
             temp = self._getOptAnalysis(result)
@@ -299,15 +293,15 @@ class BackTest:
             testResults = testResults.append(temp, ignore_index=True)
         # testResults.set_index(["参数值"], inplace = True)
         return testResults
-        
+
     # 计算收益率序列
     def _timeReturns(self, result):
         return pd.Series(result[0].analyzers.TR.get_analysis())
-        
+
     # 运行基准策略，获取基准收益值
     def _getBenchmarkReturns(self, result):
         return pd.Series(result[0].analyzers.TR_Bench.get_analysis())
-        
+
     # 分析策略的风险指标
     def _riskAnaly(self, returns, benchReturns, results):
         risk = riskAnalyzer(returns, benchReturns)
@@ -320,18 +314,17 @@ class BackTest:
         # self.__backtestResult["夏普值"] = result["夏普值"]
         results["sortino"] = result["sortino"]
         results["calmar"] = result["calmar"]
-        
+
     # 回测结果绘图
     def _drawResult(self):
-        self.__cerebro.plot(numfigs = 2)
-        figname = type(self).__name__+".png"
+        self.__cerebro.plot(numfigs=2)
+        figname = type(self).__name__ + ".png"
         plt.savefig(figname)
 
-        
 
 # 用empyrical库计算风险指标
 class riskAnalyzer:
-    def __init__(self, returns, benchReturns, riskFreeRate = 0.02):
+    def __init__(self, returns, benchReturns, riskFreeRate=0.02):
         self.__returns = returns
         self.__benchReturns = benchReturns
         self.__risk_free = riskFreeRate
@@ -343,7 +336,7 @@ class riskAnalyzer:
         self.__sharpe = 0.0
         self.__sortino = 0.0
         self.__calmar = 0.0
-        
+
     def run(self):
         # 计算各指标
         self._alpha_beta()
@@ -353,7 +346,7 @@ class riskAnalyzer:
         self._sharpe()
         self._sortino()
         self._calmar()
-        result = pd.Series(dtype = "float64")
+        result = pd.Series(dtype="float64")
         result["阿尔法"] = self.__alpha
         result["贝塔"] = self.__beta
         result["信息比例"] = self.__info
@@ -363,25 +356,25 @@ class riskAnalyzer:
         result["sortino"] = self.__sortino
         result["calmar"] = self.__calmar
         return result
-        
+
     def _alpha_beta(self):
-        self.__alpha, self.__beta = ey.alpha_beta(returns = self.__returns, factor_returns = self.__benchReturns, risk_free = self.__risk_free, annualization = 1)
-        
+        self.__alpha, self.__beta = ey.alpha_beta(returns=self.__returns, factor_returns=self.__benchReturns,
+                                                  risk_free=self.__risk_free, annualization=1)
+
     def _info(self):
-        self.__info = ey.excess_sharpe(returns = self.__returns, factor_returns = self.__benchReturns)
-        
+        self.__info = ey.excess_sharpe(returns=self.__returns, factor_returns=self.__benchReturns)
+
     def _vola(self):
         self.__vola = ey.annual_volatility(self.__returns, period='daily')
-    
+
     def _omega(self):
-        self.__omega = ey.omega_ratio(returns = self.__returns, risk_free = self.__risk_free)
-        
+        self.__omega = ey.omega_ratio(returns=self.__returns, risk_free=self.__risk_free)
+
     def _sharpe(self):
-        self.__sharpe = ey.sharpe_ratio(returns = self.__returns, annualization = 1)
-        
+        self.__sharpe = ey.sharpe_ratio(returns=self.__returns, annualization=1)
+
     def _sortino(self):
-        self.__sortino = ey.sortino_ratio(returns = self.__returns)
-        
+        self.__sortino = ey.sortino_ratio(returns=self.__returns)
+
     def _calmar(self):
-        self.__calmar = ey.calmar_ratio(returns = self.__returns)
-        
+        self.__calmar = ey.calmar_ratio(returns=self.__returns)
