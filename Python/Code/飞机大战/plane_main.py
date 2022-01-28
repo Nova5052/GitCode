@@ -15,6 +15,7 @@ class PlaneGame(object):
         self.__create_sprites()
         # 设置定时器事件 创建敌机
         pygame.time.set_timer(CREATE_ENEMY_EVENT, 1000)
+        pygame.time.set_timer(HERO_FIRE_EVENT, 500)
 
     def __create_sprites(self):
         # 创建背景精灵
@@ -24,6 +25,10 @@ class PlaneGame(object):
 
         # 创建敌机精灵组
         self.enemy_group = pygame.sprite.Group()
+
+        # 创建英雄精灵组
+        self.hero = Hero()
+        self.hero_group = pygame.sprite.Group(self.hero)
 
     def StartGame(self):
         while True:
@@ -48,16 +53,64 @@ class PlaneGame(object):
                 # 创建敌机精灵
                 enemy = Enemy()
                 self.enemy_group.add(enemy)
+            elif event.type == HERO_FIRE_EVENT:
+                self.hero.fire()
 
+        # 控制英雄移动
+        keys_pressed = pygame.key.get_pressed()
+        if keys_pressed[pygame.K_RIGHT]:
+            self.hero.speed = 2
+        elif keys_pressed[pygame.K_LEFT]:
+            self.hero.speed = -2
+        elif keys_pressed[pygame.K_UP]:
+            self.hero.speed_y = -2
+        elif keys_pressed[pygame.K_DOWN]:
+            self.hero.speed_y = 2
+        else:
+            self.hero.speed = 0
+            self.hero.speed_y = 0
 
     def __check_collide(self):
-        pass
+        # 子弹摧毁敌机
+        pygame.sprite.groupcollide(self.hero.bullet_group, self.enemy_group, True, True)
+        # pygame.sprite.groupcollide(self.hero_group, self.enemy_group, True, True)
+
+        enemies = pygame.sprite.spritecollide(self.hero, self.enemy_group, True)
+        if len(enemies) > 0:
+            pygame.time.set_timer(HERO_FIRE_EVENT, 0)
+            self.hero.image = pygame.image.load("./images/me_destroy_1.png")
+            self.hero_group.update()
+            self.hero_group.draw(self.screen)
+            time.sleep(1)
+            self.hero.image = pygame.image.load("./images/me_destroy_2.png")
+            self.hero_group.update()
+            self.hero_group.draw(self.screen)
+            time.sleep(1)
+            self.hero.image = pygame.image.load("./images/me_destroy_3.png")
+            self.hero_group.update()
+            self.hero_group.draw(self.screen)
+            time.sleep(1)
+            self.hero.image = pygame.image.load("./images/me_destroy_4.png")
+            self.hero_group.update()
+            self.hero_group.draw(self.screen)
+            # self.hero.destroy()
+            # self.hero.kill()
+            # PlaneGame.__game_over()
 
     def __update_sprites(self):
+        # 更新背景
         self.back_group.update()
         self.back_group.draw(self.screen)
+        # 更新敌机
         self.enemy_group.update()
         self.enemy_group.draw(self.screen)
+        # 更新英雄
+        self.hero_group.update()
+        self.hero_group.draw(self.screen)
+
+        # 子弹精灵组
+        self.hero.bullet_group.update()
+        self.hero.bullet_group.draw(self.screen)
 
     @staticmethod
     def __game_over():
